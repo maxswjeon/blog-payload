@@ -1,0 +1,15 @@
+services:
+  mongodb:
+    image: mongo:latest
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:27017:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=${DATABASE_USERNAME}
+      - MONGO_INITDB_ROOT_PASSWORD=${DATABASE_PASSWORD}
+    command:
+      - --storageEngine=wiredTiger
+    logging:
+      driver: local
+    volumes:
+      - $HOME/data/mongodb:/data/db

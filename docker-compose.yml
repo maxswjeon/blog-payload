@@ -12,4 +12,4 @@ services:
     logging:
       driver: local
     volumes:
-      - $HOME/data/mongodb:/data/db
+      - ./data/mongodb:/data/db

@@ -1,11 +1,11 @@
 import type { Provider } from "@/payload-types";
-import { APIError } from "payload/errors";
 import type {
 	CollectionBeforeChangeHook,
 	CollectionBeforeDeleteHook,
 	CollectionBeforeValidateHook,
 	CollectionConfig,
-} from "payload/types";
+} from "payload";
+import { APIError } from "payload";
 
 import { OAuth2DiscoveryResponseSchema } from "@/schemas/OAuth2";
 

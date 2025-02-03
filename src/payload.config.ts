@@ -4,10 +4,9 @@ import { fileURLToPath } from "node:url";
 import sharp from "sharp";
 
 import { mongooseAdapter } from "@payloadcms/db-mongodb";
-import { lexicalEditor } from "@payloadcms/richtext-lexical"; // editor-import
-import { buildConfig } from "payload/config";
-
-import { LoginForm } from "./app/(payload)/_components/login";
+import { lexicalEditor } from "@payloadcms/richtext-lexical";
+import { s3Storage } from "@payloadcms/storage-s3";
+import { buildConfig } from "payload";
 
 import { Providers } from "./collections/Providers";
 import { Users } from "./collections/Users";
@@ -15,22 +14,47 @@ import { Users } from "./collections/Users";
 const filename = fileURLToPath(import.meta.url);
 const dirname = path.dirname(filename);
 
+function getS3Credentials() {
+	return process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY
+		? {
+				accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+				secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+			}
+		: undefined;
+}
+
+function getDatabaseURL() {
+	return `mongodb://${process.env.DATABASE_HOST}:${process.env.DATABASE_PORT}?authSource=admin`;
+}
+
 export default buildConfig({
 	admin: {
 		user: Users.slug,
 		components: {
-			afterLogin: [LoginForm],
+			afterLogin: ["@/app/(payload)/_components/login#LoginForm"],
+		},
+		importMap: {
+			baseDir: path.resolve(dirname),
 		},
 	},
 	collections: [Users, Providers],
 	editor: lexicalEditor({}),
-	// plugins: [payloadCloud()], // TODO: Re-enable when cloud supports 3.0
+	plugins: [
+		s3Storage({
+			collections: {},
+			bucket: process.env.S3_BUCKET || "",
+			config: {
+				credentials: getS3Credentials(),
+				region: process.env.AWS_REGION,
+			},
+		}),
+	],
 	secret: process.env.PAYLOAD_SECRET || "",
 	typescript: {
 		outputFile: path.resolve(dirname, "payload-types.ts"),
 	},
 	db: mongooseAdapter({
-		url: process.env.DATABASE_URI || "",
+		url: getDatabaseURL(),
 		connectOptions: {
 			auth: {
 				username: process.env.DATABASE_USERNAME,
